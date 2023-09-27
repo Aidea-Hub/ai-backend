@@ -10,35 +10,46 @@ from langchain.tools import DuckDuckGoSearchRun
 from langchain.utilities import WikipediaAPIWrapper
 from langchain.agents import initialize_agent
 from langchain.memory import ConversationBufferMemory
+import functions_framework
 
-# # Get the OpenAI API key from the environment variable
-# api_key = os.environ.get("OPENAI_API_KEY")
-#
-#
-# # Check if the API key is set
-# if api_key is None:
-#     raise ValueError("OPENAI_API_KEY environment variable is not set")
-
+@functions_framework.http
 def generateResearch(params):
-#     try:
-        os.environ[
-            "OPENAI_API_KEY"
-        ] = "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"
-#         wikipedia = WikipediaAPIWrapper()
-#         wikipedia_tool = Tool(
-#             name='wikipedia',
-#             func= wikipedia.run,
-#             description="Useful for when you need to look up a topic, country or person on wikipedia"
-#         )
+    # Set CORS headers for the preflight request
+    if request.method == "OPTIONS":
+        # Allows GET requests from any origin with the Content-Type
+        # header and caches preflight response for an 3600s
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "3600",
+        }
+
+        return ("", 204, headers)
+
+    # Set CORS headers for the main request
+    headers = {"Access-Control-Allow-Origin": "*"}
+
+    try:
+        # Get the input text from the dictionary
+        request_data = request.get_json()
+        description = request_data.get("description", "")
+        model = request_data.get("model", "gpt-3.5-turbo")
+
+        wikipedia = WikipediaAPIWrapper()
+        wikipedia_tool = Tool(
+            name='wikipedia',
+            func= wikipedia.run,
+            description="Useful for when you need to look up a specific company"
+        )
         search = DuckDuckGoSearchRun()
         duckduckgo_tool = Tool(
             name='Search',
             func= search.run,
             description="Useful for when you need to do a search on the internet to find information that another tool can't find. be specific with your input."
         )
-        tools = [duckduckgo_tool]
-        memory = ConversationBufferMemory(memory_key="chat_history")
-        llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+        tools = [wikipedia_tool, duckduckgo_tool]
+        llm = ChatOpenAI(temperature=0, model_name=model)
 
         research_agent = initialize_agent(
             agent= AgentType.OPENAI_FUNCTIONS,
@@ -47,56 +58,51 @@ def generateResearch(params):
             verbose=True,
             max_iterations=5,
         )
-        # Get the input text from the dictionary
-        prompt = params["prompt"]
-        format = params["format"]
-        title = params["title"]
-        description = params["description"]
 
-        prompts =
 
-        template = f"""
-        Here is a description of our product idea: {description}
+        prompts = [
+        # 1. Problem Space and Market Competition
+        f"""Here is a description of our product idea: {description}
+
+        In the problem space that we are trying to "enter", is the market competitive? Please provide an explanation of how you came to your conclusion of at least 100 words. If you cannot find an answer, provide your best guess.
+
+        ### Answer:
+        According to research,""",
+        # 2. Market Share Estimation
+        f"""Here is a description of our product idea: {description}
 
         How much market share does each competitor of our idea have? Please provide an explanation of how you came to your conclusion of at least 100 words. If you cannot find an answer, provide your best guess.
 
         ### Answer:
-        According to research,
-        """
+        According to research,""",
+        # 3. Potential for Market Share Capture
+        f"""Here is a description of our product idea: {description}
 
+        Will you be able to capture meaningful market share? Please provide an explanation of how you came to your conclusion of at least 100 words. If you cannot find an answer, provide your best guess.
 
-        # Initialize your prompt and ChatOpenAI model
-        prompt_template = PromptTemplate.from_template(template)
-        print(prompt_template)
+        ### Answer:
+        According to research,""",
+        # 4. Competitors' Competitive Advantages
+        f"""Here is a description of our product idea: {description}
 
+        What are the competitive advantages of your competitors? Please provide an explanation of how you came to your conclusion of at least 100 words. If you cannot find an answer, provide your best guess.
 
-        response = research_agent.run(prompt_template)
-#         print(wikipedia.run('Competitive Analysis'))
-#         print(search.run('Competitors for ' + title))
-        return {"response": response}, 200,
+        ### Answer:
+        According to research,""",
+        ]
+        headers = [
+            "1. Problem Space and Market Competition\n",
+            "\n\n\n2. Market Share Estimation\n",
+            "\n\n\n3. Potential for Market Share Capture\n",
+            "\n\n\n4. Competitors' Competitive Advantages\n"
+        ]
+        output = ""
+        for i in range(len(prompts)):
+            prompt_template = PromptTemplate.from_template(prompts[i])
+            response = research_agent.run(prompt_template)
+            output += headers[i] + response
 
-#     except Exception as e:
-#         return {"error": str(e)}, 500
+        return {"response": output}, 200, headers
 
-
-
-p = """
-Perform a competitive landscape analysis of competitors of the following idea, providing critical insights into existing market players, their offerings, strengths, and weaknesses.
-"""
-f = """
-1. Problem Space and Market Competition: <In the problem space that you are trying to "enter", is the market competitive?>
-2. Market Share Estimation: <How much market share does each competitor have?>
-3. Competitors' Competitive Advantages: <Will you be able to capture meaningful market share?>
-4. Potential for Market Share Capture: <What are the competitive advantages of your competitors?>
-
-Conclusion: <Conclusion of competitive landscape analysis>
-"""
-t = "TravelBuddy: Local Experience Curation"
-d = "A platform where locals can offer personalized travel experiences or guides to tourists. Unlike generic travel services, each itinerary is tailored to individual preferences and interests."
-
-# Test the function locally
-result, status_code = generateResearch(
-    {"prompt": p, "format": f, "title": t, "description": d}
-)
-print("Status Code:", status_code)
-print("Result:", result)
+    except Exception as e:
+        return {"error": str(e)}, 500, headers

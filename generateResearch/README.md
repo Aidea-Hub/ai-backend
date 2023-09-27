@@ -6,8 +6,11 @@ Uses SerpApi to get the latest data from Google
 To deploy run
 
 ```
-gcloud functions deploy generateSearch \
---runtime python310 \
---trigger-http \
---allow-unauthenticated
+gcloud functions deploy generateResearch --gen2 --runtime=python311 --region=asia-east2 --source=. --entry-point=generateResearch --trigger-http --allow-unauthenticated --set-env-vars OPENAI_API_KEY=<PASTE_KEY_HERE>
+```
+
+
+To run locally
+```commandline
+functions-framework-python --target generateResearch
 ```
