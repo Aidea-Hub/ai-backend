@@ -11,7 +11,7 @@ It performs the following 3 steps:
 To deploy run
 
 ```commandline
-gcloud functions deploy generateReflect --gen2 --runtime=python311 --region=asia-east2 --source=. --entry-point=generateReflect --trigger-http --allow-unauthenticated --set-env-vars OPENAI_API_KEY=<PASTE_KEY_HERE>
+gcloud functions deploy generateReflect --gen2 --runtime=python311 --region=asia-east2 --source=. --entry-point=generateReflect --trigger-http --allow-unauthenticated --timeout=120 --set-env-vars OPENAI_API_KEY=<PASTE_KEY_HERE>
 ```
 
 
