@@ -30,10 +30,11 @@ def generateReflect(request):
     try:
         # Get the input data from the HTTP request
         request_data = request.get_json()
-        prompt = request_data["prompt"]
-        format = request_data["format"]
-        title = request_data["title"]
-        description = request_data["description"]
+        prompt = request_data.get("prompt", "")
+        format = request_data.get("format", "")
+        title = request_data.get("title", "")
+        description = request_data.get("description", "")
+        model = request_data.get("model", "gpt-3.5-turbo")
 
         template = f"""
         {prompt}
@@ -53,8 +54,8 @@ def generateReflect(request):
         prompt_template = PromptTemplate.from_template(template)
         logging.info(prompt_template)
 
-        creative_llm = ChatOpenAI(temperature=0.9, model_name="gpt-3.5-turbo")
-        base_llm = ChatOpenAI(temperature=0.5, model_name="gpt-3.5-turbo")
+        creative_llm = ChatOpenAI(temperature=0.9, model_name=model)
+        base_llm = ChatOpenAI(temperature=0.5, model_name=model)
 
         chain = SmartLLMChain(
             ideation_llm=creative_llm,
@@ -70,4 +71,4 @@ def generateReflect(request):
 
     except Exception as e:
         logging.error(str(e))
-        return {"error": str(e)}, 500
+        return {"error": str(e)}, 500, headers
