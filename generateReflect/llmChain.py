@@ -231,7 +231,7 @@ class SmartLLMChain(Chain):
                     HumanMessagePromptTemplate,
                     "You are a resolved tasked with 1) finding which of "
                     f"the {self.n_ideas} answer options the CEO thought was  "
-                    "best,2) improving or merging the best answers and 3) printing the answer in full. "
+                    "best,2) improving that answer and 3) printing the answer in full. "
                     "Don't output anything for step 1 or 2, only the full answer in 3. "
                     "Let's work this out in a step by step way to be sure we have "
                     "the right answer:",
