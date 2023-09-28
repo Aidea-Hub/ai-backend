@@ -61,7 +61,7 @@ def generateReflect(request):
             ideation_llm=creative_llm,
             llm=base_llm,
             prompt=prompt_template,
-            n_ideas=2,
+            n_ideas=1,
             verbose=True
         )
 
