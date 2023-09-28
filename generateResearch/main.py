@@ -14,9 +14,6 @@ import functions_framework
 
 @functions_framework.http
 def generateResearch(request):
-    os.environ[
-        "OPENAI_API_KEY"
-    ] = "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"
     # Set CORS headers for the preflight request
     if request.method == "OPTIONS":
         # Allows GET requests from any origin with the Content-Type
