@@ -13,7 +13,10 @@ from langchain.memory import ConversationBufferMemory
 import functions_framework
 
 @functions_framework.http
-def generateResearch(params):
+def generateResearch(request):
+    os.environ[
+        "OPENAI_API_KEY"
+    ] = "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"
     # Set CORS headers for the preflight request
     if request.method == "OPTIONS":
         # Allows GET requests from any origin with the Content-Type
@@ -90,7 +93,7 @@ def generateResearch(params):
         ### Answer:
         According to research,""",
         ]
-        headers = [
+        headings = [
             "1. Problem Space and Market Competition\n",
             "\n\n\n2. Market Share Estimation\n",
             "\n\n\n3. Potential for Market Share Capture\n",
@@ -100,7 +103,7 @@ def generateResearch(params):
         for i in range(len(prompts)):
             prompt_template = PromptTemplate.from_template(prompts[i])
             response = research_agent.run(prompt_template)
-            output += headers[i] + response
+            output += headings[i] + response
 
         return {"response": output}, 200, headers
 
