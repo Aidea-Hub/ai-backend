@@ -11,6 +11,7 @@ https://github.com/Aidea-Hub/ai-backend.git
 ### Running locally
 1. cd into each functions's folder and install the requirements 
 ```
+cd path/to/function_directory
 pip install -r requirements.txt
 ```
 2. Run each function locally. Follow the respective function's README instructions. It should look something like:
